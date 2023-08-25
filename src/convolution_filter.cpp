@@ -94,11 +94,14 @@ static float unroll_conv_f(int first, int limit, int offset, const float* impuls
 }
 
 float ConvolutionFilter::f(float sample) {
+
+    //if (!m_sampleCount) return 0;
+
     m_shiftRegister[m_shiftOffset] = sample;
 
     float result = 0;
 
-#if 0
+#if 1
 
     // orig code
 

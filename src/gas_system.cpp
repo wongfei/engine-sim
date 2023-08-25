@@ -260,7 +260,7 @@ __forceinline float OldApproximatePower(float b, float e) {
     return u.f;
 }
 
-#if 0
+#if 1
 #define impl_flowRate flowRate // orig code
 #else
 #define impl_flowRate flowRate_custom // perf hack
