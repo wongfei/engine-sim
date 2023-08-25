@@ -36,8 +36,8 @@ PistonEngineSimulator::~PistonEngineSimulator() {
     assert(m_antialiasingFilters == nullptr);
 }
 
-void PistonEngineSimulator::loadSimulation(Engine *engine, Vehicle *vehicle, Transmission *transmission) {
-    Simulator::loadSimulation(engine, vehicle, transmission);
+void PistonEngineSimulator::loadSimulation(Engine *engine, Vehicle *vehicle, Transmission *transmission, Dynamometer *dyno) {
+    Simulator::loadSimulation(engine, vehicle, transmission, dyno);
 
     m_engine = engine;
     m_vehicle = vehicle;
@@ -95,16 +95,23 @@ void PistonEngineSimulator::loadSimulation(Engine *engine, Vehicle *vehicle, Tra
         }
     }
 
-    m_transmission->addToSystem(m_system, &m_vehicleMass, m_vehicle, m_engine);
-    m_vehicle->addToSystem(m_system, &m_vehicleMass);
-
-    m_vehicleDrag.initialize(&m_vehicleMass, m_vehicle);
-    m_system->addConstraint(&m_vehicleDrag);
-
     m_vehicleMass.reset();
     m_vehicleMass.m = 1.0;
     m_vehicleMass.I = 1.0;
-    m_system->addRigidBody(&m_vehicleMass);
+
+    if (m_transmission) {
+        m_transmission->addToSystem(m_system, &m_vehicleMass, m_vehicle, m_engine);
+    }
+
+    if (m_vehicle) {
+        m_vehicle->addToSystem(m_system, &m_vehicleMass);
+        m_vehicleDrag.initialize(&m_vehicleMass, m_vehicle);
+        m_system->addConstraint(&m_vehicleDrag);
+    }
+
+    if (m_transmission || m_vehicle) {
+        m_system->addRigidBody(&m_vehicleMass);
+    }
 
     for (int i = 0; i < cylinderCount; ++i) {
         Piston *piston = m_engine->getPiston(i);
@@ -173,8 +180,10 @@ void PistonEngineSimulator::loadSimulation(Engine *engine, Vehicle *vehicle, Tra
         m_system->addForceGenerator(m_engine->getChamber(i));
     }
 
-    m_dyno.connectCrankshaft(m_engine->getOutputCrankshaft());
-    m_system->addConstraint(&m_dyno);
+    if (getDyno()) {
+        getDyno()->connectCrankshaft(m_engine->getOutputCrankshaft());
+        m_system->addConstraint(getDyno());
+    }
 
     m_starterMotor.connectCrankshaft(m_engine->getOutputCrankshaft());
     m_starterMotor.m_maxTorque = m_engine->getStarterTorque();

@@ -22,7 +22,7 @@ void es_script::Compiler::initialize() {
     m_compiler = new piranha::Compiler(&m_rules);
     m_compiler->setFileExtension(".mr");
 
-    m_compiler->addSearchPath("../../es/");
+    //m_compiler->addSearchPath("../../es/");
     m_compiler->addSearchPath("../es/");
     m_compiler->addSearchPath("es/");
 
@@ -32,7 +32,7 @@ void es_script::Compiler::initialize() {
 bool es_script::Compiler::compile(const piranha::IrPath &path) {
     bool successful = false;
 
-    std::ofstream file("error_log.log", std::ios::out);
+    std::ofstream file("es_compiler.log", std::ios::out);
     piranha::IrCompilationUnit *unit = m_compiler->compile(path);
     if (unit == nullptr) {
         file << "Can't find file: " << path.toString() << "\n";

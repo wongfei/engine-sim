@@ -1,4 +1,3 @@
-#include "..\include\engine.h"
 #include "../include/engine.h"
 
 #include "../include/constants.h"
@@ -383,13 +382,13 @@ int Engine::getMaxDepth() const {
     return maxDepth;
 }
 
-Simulator *Engine::createSimulator(Vehicle *vehicle, Transmission *transmission) {
+Simulator *Engine::createSimulator(Vehicle *vehicle, Transmission *transmission, Dynamometer *dyno) {
     PistonEngineSimulator *simulator = new PistonEngineSimulator;
     Simulator::Parameters simulatorParams;
     simulatorParams.systemType = Simulator::SystemType::NsvOptimized;
     simulator->initialize(simulatorParams);
 
-    simulator->loadSimulation(this, vehicle, transmission);
+    simulator->loadSimulation(this, vehicle, transmission, dyno);
     simulator->setFluidSimulationSteps(8);
 
     return static_cast<Simulator *>(simulator);

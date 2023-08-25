@@ -72,6 +72,7 @@ EngineSimApplication::EngineSimApplication() {
 
     m_vehicle = nullptr;
     m_transmission = nullptr;
+    m_dyno = nullptr;
 
     m_oscillatorSampleOffset = 0;
     m_gameWindowHeight = 256;
@@ -437,7 +438,8 @@ void EngineSimApplication::destroy() {
 void EngineSimApplication::loadEngine(
     Engine *engine,
     Vehicle *vehicle,
-    Transmission *transmission)
+    Transmission *transmission,
+    Dynamometer *dyno)
 {
     destroyObjects();
 
@@ -456,6 +458,12 @@ void EngineSimApplication::loadEngine(
         m_transmission = nullptr;
     }
 
+    // THIS IS SPARTA!!!!
+    if (m_dyno != nullptr) {
+        delete m_dyno;
+        m_dyno = nullptr;
+    }
+
     if (m_iceEngine != nullptr) {
         m_iceEngine->destroy();
         delete m_iceEngine;
@@ -464,8 +472,9 @@ void EngineSimApplication::loadEngine(
     m_iceEngine = engine;
     m_vehicle = vehicle;
     m_transmission = transmission;
+    m_dyno = dyno;
 
-    m_simulator = engine->createSimulator(vehicle, transmission);
+    m_simulator = engine->createSimulator(vehicle, transmission, dyno);
 
     if (engine == nullptr || vehicle == nullptr || transmission == nullptr) {
         m_iceEngine = nullptr;
@@ -641,6 +650,11 @@ void EngineSimApplication::loadScript() {
     compiler.destroy();
 #endif /* ATG_ENGINE_SIM_PIRANHA_ENABLED */
 
+    if (!engine) {
+        printf("EngineSimApplication::loadScript failed\n");
+        throw std::exception();
+    }
+
     if (vehicle == nullptr) {
         Vehicle::Parameters vehParams;
         vehParams.mass = units::mass(1597, units::kg);
@@ -663,7 +677,7 @@ void EngineSimApplication::loadScript() {
         transmission->initialize(tParams);
     }
 
-    loadEngine(engine, vehicle, transmission);
+    loadEngine(engine, vehicle, transmission, new Dynamometer());
     refreshUserInterface();
 }
 
@@ -759,7 +773,7 @@ void EngineSimApplication::processEngineInput() {
 
         m_infoCluster->setLogMessage("[N] - Set simulation freq to " + std::to_string(m_simulator->getSimulationFrequency()));
     }
-    else if (m_engine.IsKeyDown(ysKey::Code::G) && m_simulator->m_dyno.m_hold) {
+    else if (m_engine.IsKeyDown(ysKey::Code::G) && m_simulator->getDyno()->m_hold) {
         if (mouseWheelDelta > 0) {
             m_dynoSpeed += m_iceEngine->getDynoHoldStep();
         }
@@ -815,25 +829,25 @@ void EngineSimApplication::processEngineInput() {
     }
 
     if (m_engine.ProcessKeyDown(ysKey::Code::D)) {
-        m_simulator->m_dyno.m_enabled = !m_simulator->m_dyno.m_enabled;
+        m_simulator->getDyno()->m_enabled = !m_simulator->getDyno()->m_enabled;
 
-        const std::string msg = m_simulator->m_dyno.m_enabled
+        const std::string msg = m_simulator->getDyno()->m_enabled
             ? "DYNOMOMETER ENABLED"
             : "DYNOMOMETER DISABLED";
         m_infoCluster->setLogMessage(msg);
     }
 
     if (m_engine.ProcessKeyDown(ysKey::Code::H)) {
-        m_simulator->m_dyno.m_hold = !m_simulator->m_dyno.m_hold;
+        m_simulator->getDyno()->m_hold = !m_simulator->getDyno()->m_hold;
 
-        const std::string msg = m_simulator->m_dyno.m_hold
-            ? m_simulator->m_dyno.m_enabled ? "HOLD ENABLED" : "HOLD ON STANDBY [ENABLE DYNO. FOR HOLD]"
+        const std::string msg = m_simulator->getDyno()->m_hold
+            ? m_simulator->getDyno()->m_enabled ? "HOLD ENABLED" : "HOLD ON STANDBY [ENABLE DYNO. FOR HOLD]"
             : "HOLD DISABLED";
         m_infoCluster->setLogMessage(msg);
     }
 
-    if (m_simulator->m_dyno.m_enabled) {
-        if (!m_simulator->m_dyno.m_hold) {
+    if (m_simulator->getDyno()->m_enabled) {
+        if (!m_simulator->getDyno()->m_hold) {
             if (m_simulator->getFilteredDynoTorque() > units::torque(1.0, units::ft_lb)) {
                 m_dynoSpeed += units::rpm(500) * dt;
             }
@@ -841,20 +855,22 @@ void EngineSimApplication::processEngineInput() {
                 m_dynoSpeed *= (1 / (1 + dt));
             }
 
+            #if 0
             if (m_dynoSpeed > m_iceEngine->getRedline()) {
-                m_simulator->m_dyno.m_enabled = false;
+                m_simulator->getDyno()->m_enabled = false;
                 m_dynoSpeed = units::rpm(0);
             }
+            #endif
         }
     }
     else {
-        if (!m_simulator->m_dyno.m_hold) {
+        if (!m_simulator->getDyno()->m_hold) {
             m_dynoSpeed = units::rpm(0);
         }
     }
 
     m_dynoSpeed = clamp(m_dynoSpeed, m_iceEngine->getDynoMinSpeed(), m_iceEngine->getDynoMaxSpeed());
-    m_simulator->m_dyno.m_rotationSpeed = m_dynoSpeed;
+    m_simulator->getDyno()->m_rotationSpeed = m_dynoSpeed;
 
     const bool prevStarterEnabled = m_simulator->m_starterMotor.m_enabled;
     if (m_engine.IsKeyDown(ysKey::Code::S)) {

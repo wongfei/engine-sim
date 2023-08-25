@@ -118,8 +118,8 @@ void LoadSimulationCluster::update(float dt) {
     const float systemStatuses[] = {
         isIgnitionOn() ? 1.0f : 0.01f,
         m_simulator->m_starterMotor.m_enabled ? 1.0f : 0.01f,
-        m_simulator->m_dyno.m_enabled ? 1.0f : 0.01f,
-        m_simulator->m_dyno.m_hold ? (m_simulator->m_dyno.m_enabled ? 1.0f : 0.25f) : 0.01f
+        m_simulator->getDyno()->m_enabled ? 1.0f : 0.01f,
+        m_simulator->getDyno()->m_hold ? (m_simulator->getDyno()->m_enabled ? 1.0f : 0.25f) : 0.01f
     };
 
     constexpr float RC = 0.08f;
@@ -170,7 +170,7 @@ void LoadSimulationCluster::render() {
 
     const Bounds dynoSpeedBounds = grid.get(m_bounds, 0, 1);
     m_dynoSpeedGauge->m_gauge->m_value = 
-       (float)units::toRpm(std::abs(m_simulator->m_dyno.m_rotationSpeed));
+       (float)units::toRpm(std::abs(m_simulator->getDyno()->m_rotationSpeed));
     m_dynoSpeedGauge->m_bounds = dynoSpeedBounds;
 
     Engine *engine = m_simulator->getEngine();
@@ -184,13 +184,13 @@ void LoadSimulationCluster::render() {
         { m_app->getRed(), (float)redline, (float)maxRpm, 3.0f, 6.0f, shortenAngle, -shortenAngle }, 0);
 
     const Bounds torqueBounds = grid.get(m_bounds, 1, 1);
-    m_torqueGauge->m_gauge->m_value = m_simulator->m_dyno.m_enabled
+    m_torqueGauge->m_gauge->m_value = m_simulator->getDyno()->m_enabled
         ? (float)m_filteredTorque
         : (float)m_peakTorque;
     m_torqueGauge->m_bounds = torqueBounds;
 
     const Bounds horsepowerBounds = grid.get(m_bounds, 2, 1);
-    m_hpGauge->m_gauge->m_value = m_simulator->m_dyno.m_enabled
+    m_hpGauge->m_gauge->m_value = m_simulator->getDyno()->m_enabled
         ? (float)m_filteredHorsepower
         : (float)m_peakHorsepower;
     m_hpGauge->m_bounds = horsepowerBounds;

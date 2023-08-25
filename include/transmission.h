@@ -15,16 +15,17 @@ class Transmission {
 
     public:
         Transmission();
-        ~Transmission();
+        virtual ~Transmission();
 
-        void initialize(const Parameters &params);
-        void update(double dt);
-        void addToSystem(
+        virtual void initialize(const Parameters &params);
+        virtual void update(double dt);
+        virtual void addToSystem(
             atg_scs::RigidBodySystem *system,
             atg_scs::RigidBody *rotatingMass,
             Vehicle *vehicle,
             Engine *engine);
-        void changeGear(int newGear);
+        virtual void changeGear(int newGear);
+
         inline int getGear() const { return m_gear; }
         inline void setClutchPressure(double pressure) { m_clutchPressure = pressure; }
         inline double getClutchPressure() const { return m_clutchPressure; }

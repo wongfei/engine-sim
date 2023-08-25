@@ -2,8 +2,9 @@
 
 Simulator::Simulator() {
     m_engine = nullptr;
-    m_vehicle = nullptr;
     m_transmission = nullptr;
+    m_vehicle = nullptr;
+    m_dyno = nullptr;
     m_system = nullptr;
 
     m_physicsProcessingTime = 0;
@@ -48,10 +49,11 @@ void Simulator::initialize(const Parameters &params) {
     }
 }
 
-void Simulator::loadSimulation(Engine *engine, Vehicle *vehicle, Transmission *transmission) {
+void Simulator::loadSimulation(Engine *engine, Vehicle *vehicle, Transmission *transmission, Dynamometer *dyno) {
     m_engine = engine;
     m_vehicle = vehicle;
     m_transmission = transmission;
+    m_dyno = dyno;
 }
 
 void Simulator::releaseSimulation() {
@@ -107,8 +109,14 @@ bool Simulator::simulateStep() {
     m_system->process(timestep, 1);
 
     m_engine->update(timestep);
-    m_vehicle->update(timestep);
-    m_transmission->update(timestep);
+
+    if (m_vehicle) {
+        m_vehicle->update(timestep);
+    }
+
+    if (m_transmission) {
+        m_transmission->update(timestep);
+    }
 
     updateFilteredEngineSpeed(timestep);
 
@@ -125,7 +133,7 @@ bool Simulator::simulateStep() {
     const int index =
         static_cast<int>(std::floor(DynoTorqueSamples * outputShaft->getCycleAngle() / (4 * constants::pi)));
     const int step = m_engine->isSpinningCw() ? 1 : -1;
-    m_dynoTorqueSamples[index] = m_dyno.getTorque();
+    m_dynoTorqueSamples[index] = getDyno()->getTorque();
 
     if (m_lastDynoTorqueSample != index) {
         for (int i = m_lastDynoTorqueSample + step; i != index; i += step) {
@@ -138,7 +146,7 @@ bool Simulator::simulateStep() {
                 continue;
             }
 
-            m_dynoTorqueSamples[i] = m_dyno.getTorque();
+            m_dynoTorqueSamples[i] = getDyno()->getTorque();
         }
 
         m_lastDynoTorqueSample = index;
@@ -191,10 +199,12 @@ double Simulator::getFilteredDynoTorque() const {
     return averageTorque / DynoTorqueSamples;
 }
 
-double Simulator::getDynoPower() const {
-    return (m_engine != nullptr)
-        ? getFilteredDynoTorque() * m_engine->getSpeed()
-        : 0;
+double Simulator::getDynoPower() const { 
+    return m_engine ? getFilteredDynoTorque() * m_engine->getSpeed() : 0;
+}
+
+double Simulator::getDynoTorque() const {
+    return m_dyno ? m_dyno->getTorque() : 0;
 }
 
 double Simulator::getAverageOutputSignal() const {

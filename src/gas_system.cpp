@@ -228,6 +228,98 @@ double GasSystem::flowRate(
     return flowRate * k_flow;
 }
 
+__forceinline float Q_rsqrt(float number) {
+	long i;
+	float x2, y;
+	const float threehalfs = 1.5F;
+	x2 = number * 0.5F;
+	y  = number;
+	i  = * (long*)&y;
+	i  = 0x5f3759df - (i >> 1);
+	y  = * (float*)&i;
+	y  = y * (threehalfs - (x2 * y * y));   // 1st iteration
+    //y = y * (threehalfs - (x2 * y * y));   // 2nd iteration
+	return y;
+}
+
+__forceinline float sqrt3(const float n) {
+    union { int i; float f; } u;
+    u.i = 0x2035AD0C + (*(int*)&n >> 1);
+    return n / u.f + u.f * 0.25f;
+}
+
+__forceinline double OldApproximatePower(double b, double e) {
+    union { double d; long long i; } u = { b };
+    u.i = (long long)(4606853616395542500L + e * (u.i - 4606853616395542500L));
+    return u.d;
+}
+
+__forceinline float OldApproximatePower(float b, float e) {
+    union { float f; int i; } u = { b };
+    u.i = (int)(0x3f76a7a6 + e * (u.i - 0x3f76a7a6));
+    return u.f;
+}
+
+#if 0
+#define impl_flowRate flowRate // orig code
+#else
+#define impl_flowRate flowRate_custom // perf hack
+#endif
+
+__forceinline float flowRate_custom(
+    float k_flow,
+    float P0,
+    float P1,
+    float T0,
+    float T1,
+    float hcr,
+    float chokedFlowLimit,
+    float chokedFlowRateCached)
+{
+    if (k_flow == 0) return 0;
+
+    float direction;
+    float T_0;
+    float p_0, p_T; // p_0 = upstream pressure
+
+    if (P0 > P1) {
+        direction = 1.0f;
+        T_0 = T0;
+        p_0 = P0;
+        p_T = P1;
+    }
+    else {
+        direction = -1.0f;
+        T_0 = T1;
+        p_0 = P1;
+        p_T = P0;
+    }
+
+    const float p_ratio = p_T / p_0;
+    float flowRate = 0;
+
+    if (p_ratio <= chokedFlowLimit) {
+        flowRate = chokedFlowRateCached;
+
+        flowRate /= sqrtf((float)constants::R * T_0);
+        //flowRate *= Q_rsqrt((float)constants::R * T_0);
+    }
+    else {
+        //const float s = powf(p_ratio, 1.0f / hcr);
+        const float s = OldApproximatePower(p_ratio, 1.0f / hcr);
+
+        flowRate = (2.0f * hcr) / (hcr - 1.0f);
+        flowRate *= s * (s - p_ratio);
+
+        flowRate = sqrtf(std::fmax(flowRate, 0.0f) / ((float)constants::R * T_0));
+        //flowRate = sqrt3(std::fmax(flowRate, 0.0f) / ((float)constants::R * T_0));
+    }
+
+    flowRate *= direction * p_0;
+
+    return flowRate * k_flow;
+}
+
 double GasSystem::loseN(double dn, double E_k_per_mol) {
     m_state.E_k -= E_k_per_mol * dn;
     m_state.n_mol -= dn;
@@ -386,7 +478,7 @@ double GasSystem::flow(const FlowParameters &params) {
         direction = -1.0;
     }
 
-    double flow = params.dt * flowRate(
+    double flow = params.dt * impl_flowRate(
         params.k_flow,
         sourcePressure,
         sinkPressure,
@@ -521,7 +613,7 @@ double GasSystem::flow(const FlowParameters &params) {
 
 double GasSystem::flow(double k_flow, double dt, double P_env, double T_env, const Mix &mix) {
     const double maxFlow = pressureEquilibriumMaxFlow(P_env, T_env);
-    double flow = dt * flowRate(
+    double flow = dt * impl_flowRate(
         k_flow,
         pressure(),
         P_env,

@@ -243,7 +243,7 @@ void OscilloscopeCluster::update(float dt) {
 
     Engine *engine = m_simulator->getEngine();
     if (engine != nullptr) {
-        if (m_updateTimer <= 0 && m_simulator->m_dyno.m_enabled) {
+        if (m_updateTimer <= 0 && m_simulator->getDyno()->m_enabled) {
             m_updateTimer = m_updatePeriod;
 
             m_torqueScope->addDataPoint(engine->getRpm(), m_torque);

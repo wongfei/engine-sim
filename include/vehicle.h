@@ -16,21 +16,23 @@ class Vehicle {
 
     public:
         Vehicle();
-        ~Vehicle();
+        virtual ~Vehicle();
 
-        void initialize(const Parameters &params);
-        void update(double dt);
-        void addToSystem(atg_scs::RigidBodySystem *system, atg_scs::RigidBody *rotatingMass);
+        virtual void initialize(const Parameters &params);
+        virtual void update(double dt);
+        virtual void addToSystem(atg_scs::RigidBodySystem *system, atg_scs::RigidBody *rotatingMass);
+
+        virtual double getSpeed() const;
+        virtual double linearForceToVirtualTorque(double force) const;
+
         inline double getMass() const { return m_mass; }
         inline double getRollingResistance() const { return m_rollingResistance; }
         inline double getDragCoefficient() const { return m_dragCoefficient; }
         inline double getCrossSectionArea() const { return m_crossSectionArea; }
         inline double getDiffRatio() const { return m_diffRatio; }
         inline double getTireRadius() const { return m_tireRadius; }
-        double getSpeed() const;
         inline double getTravelledDistance() const { return m_travelledDistance; }
         inline void resetTravelledDistance() { m_travelledDistance = 0; }
-        double linearForceToVirtualTorque(double force) const;
 
     protected:
         atg_scs::RigidBody *m_rotatingMass;

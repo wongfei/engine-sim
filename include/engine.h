@@ -20,6 +20,8 @@
 class Simulator;
 class Vehicle;
 class Transmission;
+class Dynamometer;
+
 class Engine : public Part {
     public:
         struct Parameters {
@@ -50,10 +52,10 @@ class Engine : public Part {
         Engine();
         virtual ~Engine();
 
-        void initialize(const Parameters &params);
+        virtual void initialize(const Parameters &params);
         virtual void destroy();
 
-        std::string getName() const { return m_name; }
+        virtual std::string getName() const { return m_name; }
 
         virtual Crankshaft *getOutputCrankshaft() const;
         virtual void setSpeedControl(double s);
@@ -62,7 +64,7 @@ class Engine : public Part {
         virtual double getThrottle() const;
         virtual double getThrottlePlateAngle() const;
         virtual void calculateDisplacement();
-        double getDisplacement() const { return m_displacement; }
+        virtual double getDisplacement() const { return m_displacement; }
         virtual double getIntakeFlowRate() const;
         virtual void update(double dt);
 
@@ -75,7 +77,7 @@ class Engine : public Part {
 
         virtual void resetFuelConsumption();
         virtual double getTotalFuelMassConsumed() const;
-        double getTotalVolumeFuelConsumed() const;
+        virtual double getTotalVolumeFuelConsumed() const;
 
         inline double getStarterTorque() const { return m_starterTorque; }
         inline double getStarterSpeed() const { return m_starterSpeed; }
@@ -107,7 +109,7 @@ class Engine : public Part {
         double getInitialNoise() const { return m_initialNoise; }
         double getInitialJitter() const { return m_initialJitter; }
 
-        virtual Simulator *createSimulator(Vehicle *vehicle, Transmission *transmission);
+        virtual Simulator *createSimulator(Vehicle *vehicle, Transmission *transmission, Dynamometer *dyno);
 
     protected:
         std::string m_name;

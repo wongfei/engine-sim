@@ -42,7 +42,7 @@ class EngineSimApplication {
         void run();
         void destroy();
 
-        void loadEngine(Engine *engine, Vehicle *vehicle, Transmission *transmission);
+        void loadEngine(Engine *engine, Vehicle *vehicle, Transmission *transmission, Dynamometer *dyno);
         void drawGenerated(
                 const GeometryGenerator::GeometryIndices &indices,
                 int layer = 0);
@@ -134,6 +134,7 @@ class EngineSimApplication {
         Engine *m_iceEngine;
         Vehicle *m_vehicle;
         Transmission *m_transmission;
+        Dynamometer *m_dyno;
         Simulator *m_simulator;
         double m_dynoSpeed;
         double m_torque;

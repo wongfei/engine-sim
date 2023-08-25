@@ -32,7 +32,7 @@ public:
     virtual ~Simulator();
 
     virtual void initialize(const Parameters &params);
-    void loadSimulation(Engine *engine, Vehicle *vehicle, Transmission *transmission);
+    void loadSimulation(Engine *engine, Vehicle *vehicle, Transmission *transmission, Dynamometer *dyno);
     void releaseSimulation();
 
     virtual void startFrame(double dt);
@@ -52,6 +52,7 @@ public:
     Engine *getEngine() const { return m_engine; }
     Transmission *getTransmission() const { return m_transmission; }
     Vehicle *getVehicle() const { return m_vehicle; }
+    Dynamometer *getDyno() const { return m_dyno; }
     atg_scs::RigidBodySystem *getSystem() { return m_system; }
 
     void setSimulationFrequency(int frequency) { m_simulationFrequency = frequency; }
@@ -63,6 +64,7 @@ public:
     double getTargetSynthesizerLatency() const { return m_targetSynthesizerLatency; }
     double getSynthesizerInputLatency() const { return m_synthesizer.getLatency(); }
     double getSynthesizerInputLatencyTarget() const;
+    Synthesizer* getSynthesizer() { return &m_synthesizer; }
 
     void setSimulationSpeed(double simSpeed) { m_simulationSpeed = simSpeed; }
     double getSimulationSpeed() const { return m_simulationSpeed; }
@@ -73,11 +75,12 @@ public:
 
     virtual double getFilteredDynoTorque() const;
     virtual double getDynoPower() const;
+    virtual double getDynoTorque() const;
     virtual double getAverageOutputSignal() const;
 
     double filteredEngineSpeed() const { return m_filteredEngineSpeed; }
 
-    Dynamometer m_dyno;
+    //Dynamometer m_dyno;
     StarterMotor m_starterMotor;
 
 protected:
@@ -103,6 +106,7 @@ private:
     Engine *m_engine;
     Transmission *m_transmission;
     Vehicle *m_vehicle;
+    Dynamometer *m_dyno;
 
     double m_physicsProcessingTime;
 

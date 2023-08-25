@@ -10,9 +10,9 @@ class Dynamometer : public atg_scs::Constraint {
         Dynamometer();
         virtual ~Dynamometer();
 
-        void connectCrankshaft(Crankshaft *crankshaft);
+        virtual void connectCrankshaft(Crankshaft *crankshaft);
         virtual void calculate(Output *output, atg_scs::SystemState *state);
-        double getTorque() const;
+        virtual double getTorque() const;
 
         double m_rotationSpeed;
         double m_ks;

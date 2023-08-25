@@ -23,7 +23,7 @@ class PistonEngineSimulator : public Simulator {
         PistonEngineSimulator();
         virtual ~PistonEngineSimulator() override;
 
-        void loadSimulation(Engine *engine, Vehicle *vehicle, Transmission *transmission);
+        void loadSimulation(Engine *engine, Vehicle *vehicle, Transmission *transmission, Dynamometer *dyno);
 
         virtual double getTotalExhaustFlow() const;
         void endFrame();
