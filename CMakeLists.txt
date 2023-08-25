@@ -23,7 +23,11 @@ set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "cmake")
 project(engine-sim)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob2 /DNDEBUG /Oi /Ot /Oy /GL")
+
+if(MSVC)
+set(CMAKE_CXX_FLAGS_RELEASE "/DNDEBUG /MD /O2 /Ob2 /Oi /Ot /Oy /GL /GS- /fp:fast /arch:AVX2")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/Zi /DNDEBUG /MD /O2 /Ob2 /Oi /Ot /Oy /GL /GS- /fp:fast /arch:AVX2")
+endif()
 
 # ========================================================
 # GTEST
